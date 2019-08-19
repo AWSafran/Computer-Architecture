@@ -17,22 +17,22 @@ class CPU:
     def ram_write(self, mem_address_register, mem_data_register):
         self.ram[mem_address_register] = mem_data_register
 
-    def load(self):
+    def load(self, argfile):
         """Load a program into memory."""
 
         address = 0
+        program = []
 
-        # For now, we've just hardcoded a program:
+        f = open(f'examples/{argfile}', 'r')
+        commands = f.read().split('\n')
+        f.close()
 
-        program = [
-            # From print8.ls8
-            0b10000010, # LDI R0,8
-            0b00000000, # Register 0
-            0b00001000, # numeric value 8
-            0b01000111, # PRN R0
-            0b00000000, # register 0
-            0b00000001, # HLT
-        ]
+        # Pull the binary and convert it from string
+        for command in commands:
+            if len(command) >= 8:
+                binary = command[:8]
+                program.append(int(binary, base=2))
+
 
         for instruction in program:
             self.ram[address] = instruction
@@ -75,10 +75,10 @@ class CPU:
         HLT = 0b00000001
         PRN = 0b01000111
         LDI = 0b10000010
+        MUL = 0b10100010
 
         running = True
 
-        print("Running")
 
         while running:
 
@@ -94,6 +94,11 @@ class CPU:
                 operand_a = self.ram_read(instruction_register + 1)
                 operand_b = self.ram_read(instruction_register + 2)
                 self.register[operand_a] = operand_b
+                instruction_register += 2
+            elif instruction == MUL:
+                operand_a = self.ram_read(instruction_register + 1)
+                operand_b = self.ram_read(instruction_register + 2)
+                self.register[operand_a] = self.register[operand_a] * self.register[operand_b]
                 instruction_register += 2
             
             instruction_register += 1
