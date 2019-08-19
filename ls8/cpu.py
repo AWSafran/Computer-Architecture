@@ -72,11 +72,13 @@ class CPU:
         """Run the CPU."""
         instruction_register = self.pc
 
-        HLT = 0x00000001
-        PRN = 0x01000111
-        LDI = 0x10000010
+        HLT = 0b00000001
+        PRN = 0b01000111
+        LDI = 0b10000010
 
         running = True
+
+        print("Running")
 
         while running:
 
@@ -91,8 +93,7 @@ class CPU:
             elif instruction == LDI:
                 operand_a = self.ram_read(instruction_register + 1)
                 operand_b = self.ram_read(instruction_register + 2)
-
-                self.ram_write(operand_a, operand_b)
+                self.register[operand_a] = operand_b
                 instruction_register += 2
             
             instruction_register += 1
