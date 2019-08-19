@@ -6,8 +6,16 @@ class CPU:
     """Main CPU class."""
 
     def __init__(self):
-        """Construct a new CPU."""
-        pass
+        self.ram = [None] * 256
+        self.register = [None] * 8
+        self.pc = 0
+
+    def ram_read(self, mem_address_register):
+        mem_data_register = self.ram[mem_address_register]
+        return mem_data_register
+
+    def ram_write(self, mem_address_register, mem_data_register):
+        self.ram[mem_address_register] = mem_data_register
 
     def load(self):
         """Load a program into memory."""
@@ -19,10 +27,10 @@ class CPU:
         program = [
             # From print8.ls8
             0b10000010, # LDI R0,8
-            0b00000000,
-            0b00001000,
+            0b00000000, # Register 0
+            0b00001000, # numeric value 8
             0b01000111, # PRN R0
-            0b00000000,
+            0b00000000, # register 0
             0b00000001, # HLT
         ]
 
