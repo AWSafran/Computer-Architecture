@@ -9,6 +9,7 @@ class CPU:
         self.ram = [None] * 256
         self.register = [None] * 8
         self.pc = 0
+        self.running = True
 
     def ram_read(self, mem_address_register):
         mem_data_register = self.ram[mem_address_register]
@@ -35,8 +36,11 @@ class CPU:
 
 
         for instruction in program:
-            self.ram[address] = instruction
+            self.ram_write(address, instruction)
             address += 1
+
+
+        
 
 
     def alu(self, op, reg_a, reg_b):
@@ -66,41 +70,51 @@ class CPU:
         ), end='')
 
         for i in range(8):
-            print(" %02X" % self.reg[i], end='')
+            print(" %02X" % self.register[i], end='')
 
         print()
 
+    def prn(self, instruction_register):
+        operand_a = self.ram_read(instruction_register + 1)
+        print(self.register[operand_a])
+        return instruction_register + 1
+
+    def ldi(self, instruction_register):
+        operand_a = self.ram_read(instruction_register + 1)
+        operand_b = self.ram_read(instruction_register + 2)
+        self.register[operand_a] = operand_b
+        return instruction_register + 2
+
+    def mul(self, instruction_register):
+        operand_a = self.ram_read(instruction_register + 1)
+        operand_b = self.ram_read(instruction_register + 2)
+        self.alu("MUL", operand_a, operand_b)
+        return instruction_register + 2
+
+    def invalid(self, instruction_register):
+        print("Invalid Function")
+        return instruction_register
+
+    def hlt(self, instruction_register):
+        self.running = False
+        return instruction_register
+
+
     def run(self):
         """Run the CPU."""
+
         instruction_register = self.pc
+        instruction_dictionary ={
+            0b01000111: self.prn,
+            0b10000010: self.ldi,
+            0b10100010: self.mul,
+            0b00000001: self.hlt
+        }
 
-        HLT = 0b00000001
-        PRN = 0b01000111
-        LDI = 0b10000010
-        MUL = 0b10100010
-
-        running = True
-
-
-        while running:
-
+        while self.running:
             instruction = self.ram_read(instruction_register)
-
-            if instruction == HLT:
-                running = False
-            elif instruction == PRN:
-                operand_a = self.ram_read(instruction_register + 1)
-                print(self.register[operand_a])
-                instruction_register += 1
-            elif instruction == LDI:
-                operand_a = self.ram_read(instruction_register + 1)
-                operand_b = self.ram_read(instruction_register + 2)
-                self.register[operand_a] = operand_b
-                instruction_register += 2
-            elif instruction == MUL:
-                operand_a = self.ram_read(instruction_register + 1)
-                operand_b = self.ram_read(instruction_register + 2)
-                self.alu("MUL", operand_a, operand_b)
-                instruction_register += 2
+            #print(f"Pulled instruction: {instruction}")
             
+            function = instruction_dictionary.get(instruction, self.invalid)
+            instruction_register = function(instruction_register)
             instruction_register += 1
