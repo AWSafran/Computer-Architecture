@@ -10,6 +10,7 @@ class CPU:
         self.register = [None] * 8
         self.pc = 0
         self.running = True
+        self.register[-1] = 255
 
     def ram_read(self, mem_address_register):
         mem_data_register = self.ram[mem_address_register]
@@ -99,6 +100,19 @@ class CPU:
         self.running = False
         return instruction_register
 
+    def pop(self, instruction_register):
+        operand_a = self.ram[instruction_register + 1]
+        operand_b = self.ram[self.register[-1]]
+        self.register[operand_a] = operand_b
+        self.register[-1] += 1
+        return instruction_register + 1
+
+    def push(self, instruction_register):
+        self.register[-1] -= 1
+        operand_a = self.ram[instruction_register + 1]
+        self.ram_write(self.register[-1], self.register[operand_a])
+        return instruction_register + 1
+
 
     def run(self):
         """Run the CPU."""
@@ -108,7 +122,9 @@ class CPU:
             0b01000111: self.prn,
             0b10000010: self.ldi,
             0b10100010: self.mul,
-            0b00000001: self.hlt
+            0b00000001: self.hlt,
+            0b01000101: self.push,
+            0b01000110: self.pop
         }
 
         while self.running:
