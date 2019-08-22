@@ -117,11 +117,10 @@ class CPU:
         return instruction_register + 1
 
     def call(self, instruction_register):
-        print(f"pushing {instruction_register + 2} to the stack")
-        print(f"Calling function {self.ram[instruction_register]}")
-        self.push(instruction_register + 2)
-        print(f"Moving register to {self.ram_read(instruction_register + 1) - 1}")
-        return self.ram_read(instruction_register + 1) - 1
+        self.register[-1] -= 1
+        self.ram_write(self.register[-1], instruction_register + 2)
+        register_address = self.ram_read(instruction_register + 1)
+        return self.register[register_address] -1
 
     def ret(self, instruction_register):
         #We can't use self.pop, that assigns a value to a register
@@ -130,13 +129,14 @@ class CPU:
         return new_pc_value - 1
 
     def add(self, instruction_register):
-        pass
+        operand_a = self.ram_read(instruction_register + 1)
+        operand_b = self.ram_read(instruction_register + 2)
+        self.register[operand_a] += self.register[operand_b]
+        return instruction_register + 2
 
 
     def run(self):
         """Run the CPU."""
-
-        print(f"Ram: {self.ram}")
 
         instruction_register = self.pc
         instruction_dictionary ={
@@ -159,4 +159,3 @@ class CPU:
             instruction_register = function(instruction_register)
             instruction_register += 1
 
-        print(f"Ram at end: {self.ram}")
