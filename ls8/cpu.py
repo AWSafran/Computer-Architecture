@@ -6,11 +6,11 @@ class CPU:
     """Main CPU class."""
 
     def __init__(self):
-        self.ram = [None] * 256
+        self.ram = [None] * 40
         self.register = [None] * 8
         self.pc = 0
         self.running = True
-        self.register[-1] = 255
+        self.register[-1] = 39
 
     def ram_read(self, mem_address_register):
         mem_data_register = self.ram[mem_address_register]
@@ -33,7 +33,10 @@ class CPU:
         for command in commands:
             if len(command) >= 8:
                 binary = command[:8]
-                program.append(int(binary, base=2))
+                try:
+                    program.append(int(binary, base=2))
+                except:
+                    pass
 
 
         for instruction in program:
@@ -113,9 +116,27 @@ class CPU:
         self.ram_write(self.register[-1], self.register[operand_a])
         return instruction_register + 1
 
+    def call(self, instruction_register):
+        print(f"pushing {instruction_register + 2} to the stack")
+        print(f"Calling function {self.ram[instruction_register]}")
+        self.push(instruction_register + 2)
+        print(f"Moving register to {self.ram_read(instruction_register + 1) - 1}")
+        return self.ram_read(instruction_register + 1) - 1
+
+    def ret(self, instruction_register):
+        #We can't use self.pop, that assigns a value to a register
+        new_pc_value = self.ram[self.register[-1]]
+        self.register[-1] += 1
+        return new_pc_value - 1
+
+    def add(self, instruction_register):
+        pass
+
 
     def run(self):
         """Run the CPU."""
+
+        print(f"Ram: {self.ram}")
 
         instruction_register = self.pc
         instruction_dictionary ={
@@ -124,7 +145,10 @@ class CPU:
             0b10100010: self.mul,
             0b00000001: self.hlt,
             0b01000101: self.push,
-            0b01000110: self.pop
+            0b01000110: self.pop,
+            0b01010000: self.call,
+            0b00010001: self.ret,
+            0b10100000: self.add
         }
 
         while self.running:
@@ -134,3 +158,5 @@ class CPU:
             function = instruction_dictionary.get(instruction, self.invalid)
             instruction_register = function(instruction_register)
             instruction_register += 1
+
+        print(f"Ram at end: {self.ram}")
