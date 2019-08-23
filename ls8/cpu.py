@@ -11,6 +11,9 @@ class CPU:
         self.pc = 0
         self.running = True
         self.register[-1] = 39
+        self.less_flag = register[4]
+        self.greater_flag = register[5]
+        self.equal_flag = register[6]
 
     def ram_read(self, mem_address_register):
         mem_data_register = self.ram[mem_address_register]
@@ -55,6 +58,16 @@ class CPU:
         #elif op == "SUB": etc
         elif op == "MUL":
             self.register[reg_a] *= self.register[reg_b]
+        elif op == "CMP":
+            self.equal_flag = 0
+            self.less_flag = 0
+            self.greater_flag = 0
+            if self.register[reg_a] < self.register[reg_b]:
+                self.less_flag = 1
+            elif self.register[reg_a] > self.register[reg_b]:
+                self.greater_flag = 1
+            else:
+                self.equal_flag = 1
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -131,7 +144,13 @@ class CPU:
     def add(self, instruction_register):
         operand_a = self.ram_read(instruction_register + 1)
         operand_b = self.ram_read(instruction_register + 2)
-        self.register[operand_a] += self.register[operand_b]
+        self.alu["ADD", operand_a, operand_b]
+        return instruction_register + 2
+
+    def cmp(self, instruction_register):
+        operand_a = self.ram_read(instruction_register + 1)
+        operand_b = self.ram_read(instruction_register + 2)
+        self.alu("CMP", operand_a, operand_b)
         return instruction_register + 2
 
 
@@ -148,7 +167,8 @@ class CPU:
             0b01000110: self.pop,
             0b01010000: self.call,
             0b00010001: self.ret,
-            0b10100000: self.add
+            0b10100000: self.add,
+            0b10100111: self.cmp
         }
 
         while self.running:
