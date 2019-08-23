@@ -6,14 +6,14 @@ class CPU:
     """Main CPU class."""
 
     def __init__(self):
-        self.ram = [None] * 40
+        self.ram = [None] * 256
         self.register = [None] * 8
         self.pc = 0
         self.running = True
-        self.register[-1] = 39
-        self.less_flag = register[4]
-        self.greater_flag = register[5]
-        self.equal_flag = register[6]
+        self.register[-1] = 255
+        self.less_flag = self.register[4]
+        self.greater_flag = self.register[5]
+        self.equal_flag = self.register[6]
 
     def ram_read(self, mem_address_register):
         mem_data_register = self.ram[mem_address_register]
@@ -153,6 +153,24 @@ class CPU:
         self.alu("CMP", operand_a, operand_b)
         return instruction_register + 2
 
+    def jmp(self, instruction_register):
+        operand_a = self.ram_read(instruction_register + 1)
+        operand_b = self.register[operand_a]
+        return operand_b - 1
+
+    def jeq(self, instruction_register):
+        if self.equal_flag == 1:
+            return self.jmp(instruction_register)
+        else:
+            return instruction_register + 1
+
+    def jne(self, instruction_register):
+        if self.equal_flag == 0:
+            return self.jmp(instruction_register)
+        else:
+            return instruction_register + 1
+        
+
 
     def run(self):
         """Run the CPU."""
@@ -168,7 +186,10 @@ class CPU:
             0b01010000: self.call,
             0b00010001: self.ret,
             0b10100000: self.add,
-            0b10100111: self.cmp
+            0b10100111: self.cmp,
+            0b01010110: self.jne,
+            0b01010100: self.jmp,
+            0b01010101: self.jeq
         }
 
         while self.running:
